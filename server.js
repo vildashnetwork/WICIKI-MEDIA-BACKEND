@@ -10,6 +10,8 @@ import morgan from "morgan"
 
 import "./auth/passport.js";
 
+import auth from "./routes/RegisterLogin.js"
+
 dotenv.config();
 
 const app = express();
@@ -20,6 +22,7 @@ app.use(helmet());
 
 app.use(morgan(':method :url :status :response-time ms - :res[content-length]'));
 
+app.use("/auth-user", auth)
 app.get("/", (req, res) => {
     setTimeout(() => {
         res.send("Hello, World!");
