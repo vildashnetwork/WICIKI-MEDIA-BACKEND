@@ -84,6 +84,6 @@ app.get("/auth/logout", (req, res, next) => {
 });
 
 connectdb().then(() => {
-    app.listen(4000, () => console.log("🚀 Server running on http://localhost:4000"));
+    app.listen(4000 || process.env.PORT, () => console.log("🚀 Server running on http://localhost:4000"));
 
 })
