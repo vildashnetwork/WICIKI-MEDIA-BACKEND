@@ -11,11 +11,12 @@ import morgan from "morgan"
 import "./auth/passport.js";
 
 import auth from "./routes/RegisterLogin.js"
+import cookieParser from "cookie-parser";
 
 dotenv.config();
 
 const app = express();
-
+app.use(cookieParser());
 
 app.use(cors())
 app.use(helmet());

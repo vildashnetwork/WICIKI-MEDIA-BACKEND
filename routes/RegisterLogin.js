@@ -5,6 +5,7 @@ import User from "../models/User/User.js";
 import bcrypt from "bcrypt";
 import dotenv from "dotenv";
 
+
 dotenv.config();
 const router = express.Router();
 
@@ -67,16 +68,35 @@ router.post("/register", async (req, res) => {
         const savedUser = await newUser.save();
         const token = generateToken(savedUser);
 
-        res.status(201).json({
-            message: "Signup successful",
-            token,
-            user: {
-                id: savedUser._id,
-                email: savedUser.email,
-                name: savedUser.name,
-                picture: savedUser.picture,
-            },
-        });
+        // res.status(201).json({
+        //     message: "Signup successful",
+        //     token,
+        //     user: {
+        //         id: savedUser._id,
+        //         email: savedUser.email,
+        //         name: savedUser.name,
+        //         picture: savedUser.picture,
+        //     },
+        // });
+
+        res
+            .status(201)
+            .cookie("token", token, {
+                httpOnly: true,   // prevents JavaScript access
+                secure: true,     // true if using HTTPS
+                sameSite: "strict", // helps prevent CSRF
+                maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+            })
+            .json({
+                message: "Signup successful",
+                user: {
+                    id: savedUser._id,
+                    email: savedUser.email,
+                    name: savedUser.name,
+                    picture: savedUser.picture,
+                },
+            });
+
     } catch (error) {
         console.error("Error in register route", error);
         res.status(500).json({ message: "Internal server error" });
@@ -102,16 +122,34 @@ router.post("/login", async (req, res) => {
 
         const token = generateToken(user);
 
-        res.status(200).json({
-            message: "Login successful",
-            token,
-            user: {
-                id: user._id,
-                email: user.email,
-                name: user.name,
-                picture: user.picture,
-            },
-        });
+        // res.status(200).json({
+        //     message: "Login successful",
+        //     token,
+        //     user: {
+        //         id: user._id,
+        //         email: user.email,
+        //         name: user.name,
+        //         picture: user.picture,
+        //     },
+        // });
+        res
+            .status(200)
+            .cookie("token", token, {
+                httpOnly: true,    // prevents client-side JS access
+                secure: true,      // set true if using HTTPS
+                sameSite: "strict", // helps mitigate CSRF
+                maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days in ms
+            })
+            .json({
+                message: "Login successful",
+                user: {
+                    id: user._id,
+                    email: user.email,
+                    name: user.name,
+                    picture: user.picture,
+                },
+            });
+
     } catch (error) {
         console.error("Error in login route", error);
         res.status(500).json({ message: "Internal server error" });
@@ -171,22 +209,47 @@ router.put("/profile/:id", async (req, res) => {
             return res.status(404).json({ message: "User not found" });
         }
 
-        res.status(200).json({
-            message: "Profile updated successfully",
-            user: {
-                id: updatedUser._id,
-                email: updatedUser.email,
-                name: updatedUser.name,
-                NickName: updatedUser.NickName,
-                Gender: updatedUser.Gender,
-                DOB: updatedUser.DOB,
-                BIO: updatedUser.BIO,
-                Interest: updatedUser.Interest,
-                profilevisibility: updatedUser.UserSettings?.profilevisibility,
-                showbirthday: updatedUser.UserSettings?.showbirthday,
-                profile: updatedUser.profile,
-            },
-        });
+        // res.status(200).json({
+        //     message: "Profile updated successfully",
+        //     user: {
+        //         id: updatedUser._id,
+        //         email: updatedUser.email,
+        //         name: updatedUser.name,
+        //         NickName: updatedUser.NickName,
+        //         Gender: updatedUser.Gender,
+        //         DOB: updatedUser.DOB,
+        //         BIO: updatedUser.BIO,
+        //         Interest: updatedUser.Interest,
+        //         profilevisibility: updatedUser.UserSettings?.profilevisibility,
+        //         showbirthday: updatedUser.UserSettings?.showbirthday,
+        //         profile: updatedUser.profile,
+        //     },
+        // });
+        res
+            .status(200)
+            .cookie("token", token, {
+                httpOnly: true,     // secure against XSS
+                secure: true,       // use true if your site runs on HTTPS
+                sameSite: "strict", // CSRF protection
+                maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+            })
+            .json({
+                message: "Profile updated successfully",
+                user: {
+                    id: updatedUser._id,
+                    email: updatedUser.email,
+                    name: updatedUser.name,
+                    NickName: updatedUser.NickName,
+                    Gender: updatedUser.Gender,
+                    DOB: updatedUser.DOB,
+                    BIO: updatedUser.BIO,
+                    Interest: updatedUser.Interest,
+                    profilevisibility: updatedUser.UserSettings?.profilevisibility,
+                    showbirthday: updatedUser.UserSettings?.showbirthday,
+                    profile: updatedUser.profile,
+                },
+            });
+
     } catch (error) {
         console.error("Error in profile update route", error);
         res.status(500).json({ message: "Internal server error" });
@@ -202,7 +265,18 @@ router.get("/user/:username", async (req, res) => {
         if (!finduser) {
             res.status(404).json({ message: "user not found " });
         }
-        res.status(201).json({ user: finduser });
+        // res.status(201).json({ user: finduser });
+        res
+            .status(201)
+            .cookie("token", token, {
+                httpOnly: true,     // blocks client-side JS from reading it
+                secure: true,       // set true if HTTPS
+                sameSite: "strict", // prevents CSRF
+                maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+            })
+            .json({
+                user: finduser,
+            });
 
     } catch (error) {
         console.error("Error in profile update route", error);
