@@ -10,9 +10,9 @@ const userSchema = new mongoose.Schema({
     name: String,
     avatar: String,
     picture: String,
-    Story: storySchema,
-    Posts: UserPostSchema,
-    personalised: personalisedschema,
+    Story: [storySchema],
+    Posts: [UserPostSchema],
+    personalised: [personalisedschema],
     createdAt: { type: Date, default: Date.now }
 });
 

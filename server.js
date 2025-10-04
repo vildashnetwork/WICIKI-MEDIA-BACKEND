@@ -18,7 +18,12 @@ dotenv.config();
 const app = express();
 app.use(cookieParser());
 
-app.use(cors())
+
+app.use(cors({
+    origin: "http://localhost:5173", // your React app URL
+    credentials: true               // allow sending cookies
+}));
+
 app.use(helmet());
 
 app.use(morgan(':method :url :status :response-time ms - :res[content-length]'));
@@ -66,19 +71,68 @@ app.get("/auth/google",
 
 // Callback route after Google login
 
-app.get("/auth/google/callback",
+// app.get("/auth/google/callback",
+//     passport.authenticate("google", { failureRedirect: "/login-failed" }),
+//     (req, res) => {
+//         const token = jwt.sign(
+//             { id: req.user._id, email: req.user.email },
+//             process.env.JWT_SECRET,
+//             { expiresIn: "7d" }
+//         );
+//         // redirect to frontend with token
+//         res.redirect(`${process.env.FRONTEND_URL}/auth/success?token=${token}`);
+//     }
+// );
+// app.get("/auth/google/callback",
+//     passport.authenticate("google", { failureRedirect: "/login-failed" }),
+//     (req, res) => {
+//         // Generate JWT
+//         const token = jwt.sign(
+//             { id: req.user._id, email: req.user.email },
+//             process.env.JWT_SECRET,
+//             { expiresIn: "7d" }
+//         );
+
+//         // Set JWT as cookie
+//         res.cookie("token", token, {
+//             httpOnly: true,      // JS cannot access it
+//             secure: process.env.NODE_ENV === "production", // only HTTPS in prod
+//             sameSite: "lax",     // CSRF protection
+//             maxAge: 7 * 24 * 60 * 60 * 1000 // 7 days
+//         });
+
+//         // Redirect user to frontend page (no token in URL)
+//         res.redirect(`${process.env.FRONTEND_URL}/auth/success`);
+//     }
+// );
+app.get(
+    "/auth/google/callback",
     passport.authenticate("google", { failureRedirect: "/login-failed" }),
     (req, res) => {
-        const token = jwt.sign(
-            { id: req.user._id, email: req.user.email },
-            process.env.JWT_SECRET,
-            { expiresIn: "7d" }
-        );
-        // redirect to frontend with token
-        res.redirect(`${process.env.FRONTEND_URL}/auth/success?token=${token}`);
+        try {
+            // Generate JWT
+            const token = jwt.sign(
+                { id: req.user._id, email: req.user.email },
+                process.env.JWT_SECRET,
+                { expiresIn: "7d" }
+            );
+
+            // Set JWT as httpOnly cookie
+            res.cookie("token", token, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === "production",
+                sameSite: "lax",
+                maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+            });
+
+            // Redirect user to frontend
+            res.redirect(`${process.env.FRONTEND_URL}/auth/success`);
+        } catch (err) {
+            console.error("Error setting JWT cookie:", err);
+            res.redirect(`${process.env.FRONTEND_URL}/login-failed`);
+        }
     }
 );
-
 
 app.get("/auth/logout", (req, res, next) => {
     req.logout(function (err) {
