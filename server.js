@@ -190,10 +190,11 @@ app.use(
         methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     })
 );
-app.options("*", cors({
+app.options("/*", cors({
     origin: [FRONTEND_URL, "http://localhost:3000"],
     credentials: true,
 }));
+
 
 
 // Session (used by Passport)
