@@ -182,23 +182,22 @@ app.use(express.json()); // <-- parse JSON bodies
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-// CORS - allow credentials and the frontend origin
+const allowedOrigins = [FRONTEND_URL, "http://localhost:3000"];
+
 app.use(cors({
-    origin: [FRONTEND_URL, "http://localhost:3000"],
-    credentials: true,
+    origin: function (origin, callback) {
+        if (!origin || allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            callback(new Error("Not allowed by CORS"));
+        }
+    },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    credentials: true,
 }));
 
-// Option 1: Using named param
-// Catch all OPTIONS requests for CORS preflight
-app.options((req, res) => {
-    res.header("Access-Control-Allow-Origin", [FRONTEND_URL, "http://localhost:3000"]);
-    res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
-    res.header("Access-Control-Allow-Headers", "Content-Type,Authorization");
-    res.header("Access-Control-Allow-Credentials", "true");
-    res.sendStatus(204); // No content
-});
-
+// Optionally handle OPTIONS requests automatically
+// app.options('*', cors());
 
 
 
