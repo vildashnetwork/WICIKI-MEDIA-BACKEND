@@ -335,111 +335,67 @@ const sanitizeUser = (userDoc) => {
     return u;
 };
 
-/**
- * POST /register
- * Body: { name, email, password, picture? }
- * Creates user, sets JWT cookie, returns created user (without password)
- */
+
 router.post("/register", async (req, res) => {
     try {
         const { email, name, password, picture } = req.body;
 
-        // Basic validation
         if (!name || !email || !password) {
-            return res.status(400).json({ message: "Name, email and password are required." });
-        }
-        if (typeof password !== "string" || password.length < 8) {
-            return res.status(400).json({ message: "Password must be at least 8 characters." });
-        }
-        if (typeof name !== "string" || name.trim().length < 3) {
-            return res.status(400).json({ message: "Name must be at least 3 characters." });
+            return res.status(400).json({ message: "All fields required" });
         }
 
-        // Check uniqueness
         const existingEmail = await User.findOne({ email });
-        if (existingEmail) {
-            return res.status(409).json({ message: "Email already exists." });
-        }
-        const existingName = await User.findOne({ name });
-        if (existingName) {
-            return res.status(409).json({ message: "Username already exists." });
-        }
+        if (existingEmail) return res.status(409).json({ message: "Email already exists" });
 
-        // Hash password
         const hashedPassword = await bcrypt.hash(password, SALT_ROUNDS);
 
-        // Default avatar if none provided
-        const profileImage =
-            picture || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name)}`;
-
-        // Create user - ensure fields align with your schema
         const newUser = new User({
             email,
             name,
             password: hashedPassword,
-            picture: profileImage,
-            // ensure personalised exists (safe default)
-            personalised: new Object(),
+            picture: picture || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name)}`
         });
 
         const savedUser = await newUser.save();
-
-        // Generate token and set cookie
         const token = generateToken(savedUser);
-        res
-            .status(201)
-            .cookie(COOKIE_NAME, token, cookieOptions)
-            .json({
-                message: "Signup successful",
-                user: sanitizeUser(savedUser),
-            });
-    } catch (error) {
-        console.error("Error in register route:", error);
-        // Duplicate key may come as MongoError: E11000 duplicate key error
-        if (error.code === 11000) {
-            return res.status(409).json({ message: "Duplicate field error", details: error.keyValue });
-        }
+
+        // ✅ manually set cookie
+        setCookie(res, token);
+
+        res.status(201).json({
+            message: "Signup successful",
+            user: sanitizeUser(savedUser),
+            usertoken: token
+        });
+    } catch (err) {
+        console.error("Register error:", err);
         res.status(500).json({ message: "Internal server error" });
     }
 });
 
-/**
- * POST /login
- * Body: { email, password }
- * Validates credentials, sets cookie, returns user
- */
+
 router.post("/login", async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        if (!email || !password) {
-            return res.status(400).json({ message: "Email and password are required." });
-        }
-
         const user = await User.findOne({ email });
-        if (!user) return res.status(404).json({ message: "User not found." });
+        if (!user) return res.status(404).json({ message: "User not found" });
 
-        // If user registered via OAuth and has no password
-        if (!user.password) {
-            return res
-                .status(403)
-                .json({ message: "Account does not have a password. Use OAuth provider to login." });
-        }
-
-        const isValid = await bcrypt.compare(password, user.password);
-        if (!isValid) return res.status(401).json({ message: "Incorrect password." });
+        const isMatch = await bcrypt.compare(password, user.password);
+        if (!isMatch) return res.status(401).json({ message: "Invalid credentials" });
 
         const token = generateToken(user);
 
-        res
-            .status(200)
-            .cookie(COOKIE_NAME, token, cookieOptions)
-            .json({
-                message: "Login successful",
-                user: sanitizeUser(user),
-            });
-    } catch (error) {
-        console.error("Error in login route:", error);
+        // ✅ manually set cookie
+        setCookie(res, token);
+
+        res.status(200).json({
+            message: "Login successful",
+            user: sanitizeUser(user),
+            usert: token
+        });
+    } catch (err) {
+        console.error("Login error:", err);
         res.status(500).json({ message: "Internal server error" });
     }
 });
@@ -514,6 +470,11 @@ router.put("/profile/:id", async (req, res) => {
 
         // Generate a new token (if you want to refresh claims after profile change)
         const token = generateToken(updatedUser);
+        res.status(201).json({
+            message: "Profile updated successfully",
+            user: sanitizeUser(updatedUser),
+            tokenon: token
+        })
 
         res
             .status(200)
