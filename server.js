@@ -168,7 +168,7 @@ const app = express();
 
 // Helpful flags
 const PORT = process.env.PORT || 4000;
-const FRONTEND_URL = process.env.FRONTEND_URL || "http://localhost:5173";
+const FRONTEND_URL = "http://localhost:5173";
 const BACKEND_URL = process.env.BACKEND_URL || `http://localhost:${PORT}`;
 const isProd = process.env.NODE_ENV === "production";
 
@@ -190,6 +190,11 @@ app.use(
         methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     })
 );
+app.options("*", cors({
+    origin: [FRONTEND_URL, "http://localhost:3000"],
+    credentials: true,
+}));
+
 
 // Session (used by Passport)
 app.use(
