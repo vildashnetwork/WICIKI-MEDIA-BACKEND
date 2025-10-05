@@ -359,8 +359,6 @@ router.post("/register", async (req, res) => {
         const savedUser = await newUser.save();
         const token = generateToken(savedUser);
 
-        // ✅ manually set cookie
-        setCookie(res, token);
 
         res.status(201).json({
             message: "Signup successful",
@@ -385,10 +383,6 @@ router.post("/login", async (req, res) => {
         if (!isMatch) return res.status(401).json({ message: "Invalid credentials" });
 
         const token = generateToken(user);
-
-        // ✅ manually set cookie
-        setCookie(res, token);
-
         res.status(200).json({
             message: "Login successful",
             user: sanitizeUser(user),
