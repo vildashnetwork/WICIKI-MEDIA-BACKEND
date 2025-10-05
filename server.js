@@ -190,10 +190,14 @@ app.use(cors({
 }));
 
 // Option 1: Using named param
-app.options("/:path(*)", cors({
-    origin: [FRONTEND_URL, "http://localhost:3000"],
-    credentials: true,
-}));
+// Catch all OPTIONS requests for CORS preflight
+app.options((req, res) => {
+    res.header("Access-Control-Allow-Origin", [FRONTEND_URL, "http://localhost:3000"]);
+    res.header("Access-Control-Allow-Methods", "GET,POST,PUT,DELETE,OPTIONS");
+    res.header("Access-Control-Allow-Headers", "Content-Type,Authorization");
+    res.header("Access-Control-Allow-Credentials", "true");
+    res.sendStatus(204); // No content
+});
 
 
 
