@@ -253,7 +253,6 @@ app.get(
             // Generate JWT
             const token = jwt.sign(
                 { id: req.user._id, email: req.user.email },
-                process.env.JWT_SECRET,
                 { expiresIn: "7d" }
             );
 
@@ -266,8 +265,8 @@ app.get(
             };
 
             res.cookie(COOKIE_NAME, token, cookieOptions);
+            res.status(201).json({ googletoken: token })
 
-            // Redirect to frontend success page (no token in URL)
             return res.redirect(`${FRONTEND_URL}/auth/success`);
         } catch (err) {
             console.error("Error setting JWT cookie:", err);
