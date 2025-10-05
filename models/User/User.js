@@ -4,9 +4,10 @@ import UserPostSchema from "./userpost/UserpostSchema.js";
 import personalisedschema from "./personalisedschema/personalisedschema.js"
 
 const userSchema = new mongoose.Schema({
-    googleId: { type: String, unique: true, sparse: true },
+    googleId: { type: String, sparse: true },
     email: { type: String, required: true },
     number: { type: String, default: "" },
+    password: { type: String },
     name: String,
     avatar: String,
     picture: String,
