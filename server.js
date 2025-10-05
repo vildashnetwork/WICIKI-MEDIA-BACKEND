@@ -189,11 +189,12 @@ app.use(cors({
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
 }));
 
-// Preflight all routes
-app.options("*", cors({
+// Option 1: Using named param
+app.options("/:path(*)", cors({
     origin: [FRONTEND_URL, "http://localhost:3000"],
     credentials: true,
 }));
+
 
 
 
