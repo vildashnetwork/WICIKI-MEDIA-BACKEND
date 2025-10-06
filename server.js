@@ -237,7 +237,7 @@ app.get("/", (req, res) => {
  *  - For local development, 'none' requires secure: true (HTTPS) — if you test locally
  *    you may need to adjust sameSite/secure or test OAuth on your deployed URL.
  */
-const COOKIE_NAME = "token";
+const COOKIE_NAME = "google_token";
 const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 app.get(
@@ -299,7 +299,6 @@ app.get(
 
             // Set cookie
             res.cookie(COOKIE_NAME, token, cookieOptions);
-
             // Redirect frontend (no JSON here)
             return res.redirect(`${FRONTEND_URL}/auth/success`);
         } catch (err) {
