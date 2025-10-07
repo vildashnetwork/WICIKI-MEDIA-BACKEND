@@ -228,7 +228,7 @@ app.get("/", (req, res) => {
     }, 500);
 });
 
-const COOKIE_NAME = "google_token";
+const COOKIE_NAME = "token";
 const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 app.get(
