@@ -270,36 +270,30 @@ app.get(
 
 app.get(
     "/auth/google/callback",
-    passport.authenticate("google", { failureRedirect: `${FRONTEND_URL}/login-failed` }),
+    passport.authenticate("google", { failureRedirect: `${process.env.FRONTEND_URL}/login-failed` }),
     (req, res) => {
         try {
-            // Generate JWT
             const token = jwt.sign(
                 { id: req.user._id, email: req.user.email },
-                process.env.JWT_SECRET,   // ✅ SECRET FIXED
+                process.env.JWT_SECRET,
                 { expiresIn: "7d" }
             );
 
-
-            // Cookie options
-            const cookieOptions = {
+            res.cookie("google_token", token, {
                 httpOnly: true,
-                secure: isProd, // true only in HTTPS
-                sameSite: isProd ? "lax" : "none", // ✅ for cross-site (frontend/backend different domains)
-                domain: "http://localhost:5173/",
-                maxAge: COOKIE_MAX_AGE,
-            };
+                secure: true,             // ✅ must be true (Render uses HTTPS)
+                sameSite: "none",         // ✅ for cross-site (frontend != backend)
+                maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+            });
 
-            // Set cookie
-            res.cookie(COOKIE_NAME, token, cookieOptions);
-            // Redirect frontend (no JSON here)
-            return res.redirect(`${FRONTEND_URL}/auth/success`);
+            return res.redirect(`${process.env.FRONTEND_URL}/auth/success`);
         } catch (err) {
             console.error("Error setting JWT cookie:", err);
-            return res.redirect(`${FRONTEND_URL}/login-failed`);
+            return res.redirect(`${process.env.FRONTEND_URL}/login-failed`);
         }
     }
 );
+
 
 app.get("/auth/logout", (req, res, next) => {
     // Clear JWT cookie
