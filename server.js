@@ -228,15 +228,6 @@ app.get("/", (req, res) => {
     }, 500);
 });
 
-/**
- * OAuth: Google
- *
- * Note: We set the JWT as an httpOnly cookie after successful OAuth.
- * For cross-site cookie behavior during OAuth redirects:
- *  - In production (HTTPS) prefer sameSite: 'lax' or 'none' with secure: true.
- *  - For local development, 'none' requires secure: true (HTTPS) — if you test locally
- *    you may need to adjust sameSite/secure or test OAuth on your deployed URL.
- */
 const COOKIE_NAME = "google_token";
 const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000; // 7 days
 
@@ -289,11 +280,13 @@ app.get(
                 { expiresIn: "7d" }
             );
 
+
             // Cookie options
             const cookieOptions = {
                 httpOnly: true,
                 secure: isProd, // true only in HTTPS
                 sameSite: isProd ? "lax" : "none", // ✅ for cross-site (frontend/backend different domains)
+                domain: "http://localhost:5173/",
                 maxAge: COOKIE_MAX_AGE,
             };
 
