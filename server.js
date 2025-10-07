@@ -279,7 +279,7 @@ app.get(
                 { expiresIn: "7d" }
             );
 
-            res.cookie("google_token", token, {
+            res.cookie("token", token, {
                 httpOnly: true,
                 secure: true,             // ✅ must be true (Render uses HTTPS)
                 sameSite: "none",         // ✅ for cross-site (frontend != backend)
