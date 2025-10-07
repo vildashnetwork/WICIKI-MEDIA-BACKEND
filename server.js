@@ -254,7 +254,7 @@ app.get(
                 maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
             });
             // ${FRONTEND_URL}
-            return res.redirect(`${process.env.FRONTEND_URL}/auth/success`);
+            return res.redirect(`https://wicikis.vercel.app`);
         } catch (err) {
             console.error("Error setting JWT cookie:", err);
             return res.redirect(`${process.env.FRONTEND_URL}/login-failed`);
