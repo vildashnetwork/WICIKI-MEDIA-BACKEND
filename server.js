@@ -236,38 +236,6 @@ app.get(
     passport.authenticate("google", { scope: ["profile", "email"] })
 );
 
-// app.get(
-//     "/auth/google/callback",
-//     passport.authenticate("google", { failureRedirect: "/login-failed" }),
-//     (req, res) => {
-//         try {
-//             // Generate JWT
-//             const token = jwt.sign(
-//                 { id: req.user._id, email: req.user.email },
-//                 { expiresIn: "7d" }
-//             );
-
-//             // Cookie options - for OAuth flow, sameSite may need 'none' if frontend and backend are on different sites
-//             const cookieOptions = {
-//                 httpOnly: true,
-//                 secure: isProd, // must be true for sameSite='none' (browsers require secure)
-//                 sameSite: isProd ? "lax" : "none",
-//                 maxAge: COOKIE_MAX_AGE,
-//             };
-
-//             res.cookie(COOKIE_NAME, token, cookieOptions);
-//             res.status(201).json({ googletoken: token })
-
-//             return res.redirect(`${FRONTEND_URL}/auth/success`);
-//         } catch (err) {
-//             console.error("Error setting JWT cookie:", err);
-//             return res.redirect(`${FRONTEND_URL}/login-failed`);
-//         }
-//     }
-// );
-
-// Logout: clear cookie + passport logout
-
 app.get(
     "/auth/google/callback",
     passport.authenticate("google", { failureRedirect: `${process.env.FRONTEND_URL}/login-failed` }),
