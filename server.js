@@ -33,7 +33,7 @@ app.use(express.json()); // <-- parse JSON bodies
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
-const allowedOrigins = [FRONTEND_URL, "http://localhost:3000", "https://wicikis.vercel.app"];
+const allowedOrigins = [FRONTEND_URL, "https://wicikis.vercel.app"];
 
 app.use(cors({
     origin: function (origin, callback) {
