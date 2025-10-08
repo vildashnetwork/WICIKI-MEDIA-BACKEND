@@ -4,12 +4,11 @@ import OTPmodel from "../models/Otp.js";
 import User from "../models/User/User.js";
 import SibApiV3Sdk from 'sib-api-v3-sdk';
 import crypto from "crypto"
+import bcrypt from "bcrypt"
 // import bodyParser from 'body-parser';
 dotenv.config()
 
-const router = e.Router();
-
-
+const router = e.Router()
 
 const client = SibApiV3Sdk.ApiClient.instance;
 const apiKey = client.authentications['api-key'];
@@ -20,37 +19,37 @@ const emailApi = new SibApiV3Sdk.TransactionalEmailsApi();
 
 //send OTP
 router.post('/send', async (req, res) => {
-    const { email } = req.body;
-    console.log("Request reset password for email:", email);
+  const { email } = req.body;
+  console.log("Request reset password for email:", email);
 
-    if (!email) {
-        console.log("Email missing in request");
-        return res.status(400).json({ message: "Email is required" });
+  if (!email) {
+    console.log("Email missing in request");
+    return res.status(400).json({ message: "Email is required" });
+  }
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      console.log("User not found for email:", email);
+      return res.status(404).json({ message: "User not found" });
     }
 
-    try {
-        const user = await User.findOne({ email });
-        if (!user) {
-            console.log("User not found for email:", email);
-            return res.status(404).json({ message: "User not found" });
-        }
+    const otp = crypto.randomInt(100000, 999999).toString();
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
-        const otp = crypto.randomInt(100000, 999999).toString();
-        const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+    await OTPmodel.findOneAndUpdate(
+      { email },
+      { otp, expiresAt },
+      { upsert: true, new: true }
+    );
 
-        await OTPmodel.findOneAndUpdate(
-            { email },
-            { otp, expiresAt },
-            { upsert: true, new: true }
-        );
+    console.log("OTP generated and saved: ", otp);
 
-        console.log("OTP generated and saved: ", otp);
-
-        const sendSmtpEmail = {
-            sender: { email: 'vildashnetwork02@gmail.com', name: 'wiciki' },
-            to: [{ email }],
-            subject: "Your Password Reset OTP Code",
-            htmlContent: `
+    const sendSmtpEmail = {
+      sender: { email: 'vildashnetwork02@gmail.com', name: 'wiciki' },
+      to: [{ email }],
+      subject: "Your Password Reset OTP Code",
+      htmlContent: `
         <!DOCTYPE html>
     <html lang="en">
     <head>
@@ -59,7 +58,7 @@ router.post('/send', async (req, res) => {
       <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f6f8; margin:0; padding:0; color:#333; }
         .container { max-width:600px; margin:40px auto; background:#fff; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.1); overflow:hidden; }
-        .header { background: linear-gradient(135deg, #0d6efd, #6610f2); color:white; padding:25px; text-align:center; font-size:22px; font-weight:bold; }
+        .header { background: linear-gradient(135deg, #fd0d0dff, #f21010ff); color:white; padding:25px; text-align:center; font-size:22px; font-weight:bold; }
         .content { padding:30px; }
         .otp-box { margin:20px 0; padding:20px; background:#f1f5f9; border-radius:8px; text-align:center; font-size:32px; letter-spacing:6px; font-weight:bold; color:#0d6efd; border:1px dashed #0d6efd; }
         .note { font-size:14px; color:#555; margin-top:10px; }
@@ -83,62 +82,80 @@ router.post('/send', async (req, res) => {
     </body>
     </html>
       `
-        };
+    };
 
-        try {
-            const result = await emailApi.sendTransacEmail(sendSmtpEmail);
-            console.log(`OTP email sent to ${email} with messageId: ${result.messageId}`);
-        } catch (emailError) {
-            console.error('Error sending OTP email:', emailError);
-            return res.status(500).json({ message: "Error sending OTP email" });
-        }
-
-        res.status(200).json({ message: "OTP sent to your email", success: true });
-    } catch (error) {
-        console.error("Error in request-reset-password:", error);
-        res.status(500).json({ message: "Internal server error" });
+    try {
+      const result = await emailApi.sendTransacEmail(sendSmtpEmail);
+      console.log(`OTP email sent to ${email} with messageId: ${result.messageId}`);
+    } catch (emailError) {
+      console.error('Error sending OTP email:', emailError);
+      return res.status(500).json({ message: "Error sending OTP email" });
     }
+
+    res.status(200).json({ message: "OTP sent to your email", success: true });
+  } catch (error) {
+    console.error("Error in request-reset-password:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
 });
 
-// router.post('/', async (req, res) => {
-//     const { email, otp, newPassword } = req.body;
+router.post('/validate', async (req, res) => {
+  const { email, otp } = req.body;
 
-//     if (!email || !otp || !newPassword)
-//         return res.status(400).json({ message: "Email, OTP and new password are required" });
+  if (!email || !otp)
+    return res.status(400).json({ message: "Email and OTP are required" });
 
-//     const normalizedEmail = email.trim().toLowerCase();
+  const normalizedEmail = email.trim().toLowerCase();
 
-//     try {
-//         const otpEntry = await OTPmodel.findOne({ email: normalizedEmail });
+  try {
+    const otpEntry = await OTPmodel.findOne({ email: normalizedEmail });
 
-//         if (!otpEntry)
-//             return res.status(400).json({ message: "OTP not found or expired" });
+    if (!otpEntry)
+      return res.status(400).json({ message: "OTP not found or expired" });
 
-//         if (otpEntry.otp.toString() !== otp.toString())
-//             return res.status(400).json({ message: "Invalid OTP" });
+    if (otpEntry.otp.toString() !== otp.toString())
+      return res.status(400).json({ message: "Invalid OTP" });
 
-//         if (otpEntry.expiresAt < new Date())
-//             return res.status(400).json({ message: "OTP expired" });
+    if (otpEntry.expiresAt < new Date())
+      return res.status(400).json({ message: "OTP expired" });
 
-//         const saltRounds = 10;
-//         const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+    // OTP is valid
+    res.status(200).json({ message: "OTP validated successfully" });
+  } catch (error) {
+    console.error("Error validating OTP:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
 
-//         const updatedUser = await Usermodel.findOneAndUpdate(
-//             { email: normalizedEmail },
-//             { password: hashedPassword },
-//             { new: true }
-//         );
+router.post("/reset", async (req, res) => {
+  try {
+    const { email, newPassword } = req.body;
 
-//         if (!updatedUser)
-//             return res.status(404).json({ message: "User not found" });
+    if (!email || !newPassword)
+      return res.status(400).json({ message: "Email and new password are required" });
 
-//         await OTPmodel.deleteOne({ email: normalizedEmail });
+    const normalizedEmail = email.trim().toLowerCase();
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
 
-//         res.status(200).json({ message: "Password reset successful" });
-//     } catch (error) {
-//         console.error("Error in reset-password:", error);
-//         res.status(500).json({ message: "Internal server error" });
-//     }
-// });
+    const updatedUser = await User.findOneAndUpdate(
+      { email: normalizedEmail },
+      { password: hashedPassword },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Delete OTP after successful password reset
+    await OTPmodel.deleteOne({ email: normalizedEmail });
+
+    res.status(200).json({ message: "Password reset successfully" });
+  } catch (error) {
+    console.error("Error resetting password:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
 
 export default router
