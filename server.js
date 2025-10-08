@@ -10,6 +10,7 @@ import cors from "cors";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
 import verify from "./routes/verifyemail.js"
+import sendotp from "./routes/OTPReset.js"
 
 import "./auth/passport.js";
 import auth from "./routes/RegisterLogin.js";
@@ -73,7 +74,8 @@ app.use(passport.session());
 
 // Routes
 app.use("/auth-user", auth);
-app.use("/verify", verify)
+app.use("/verify", verify);
+app.use("/otp", sendotp)
 
 app.get("/", (req, res) => {
     setTimeout(() => {
