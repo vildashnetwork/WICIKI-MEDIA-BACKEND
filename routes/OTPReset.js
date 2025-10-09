@@ -230,8 +230,17 @@ router.post('/send', async (req, res) => {
         <html lang="en">
         <head>
           <meta charset="UTF-8" />
-          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-          <style> /* shortened for brevity in this message */ </style>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />  
+               <style>
+     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f4f6f8; margin:0; padding:0; color:#333; }
+     .container { max-width:600px; margin:40px auto; background:#fff; border-radius:12px; box-shadow:0 4px 15px rgba(0,0,0,0.1); overflow:hidden; }
+     .header { background: linear-gradient(135deg, #fd0d0dff, #f21010ff); color:white; padding:25px; text-align:center; font-size:22px; font-weight:bold; }
+     .content { padding:30px; }
+     .otp-box { margin:20px 0; padding:20px; background:#f1f5f9; border-radius:8px; text-align:center; font-size:32px; letter-spacing:6px; font-weight:bold; color:#0d6efd; border:1px dashed #0d6efd; }
+     .note { font-size:14px; color:#555; margin-top:10px; }
+     .footer { background:#f9fafb; padding:20px; text-align:center; font-size:12px; color:#999; }
+     @media (max-width:640px) { .container { margin:20px; } .otp-box { font-size:24px; letter-spacing:4px; } }
+  </style>
         </head>
         <body>
           <div class="container">
