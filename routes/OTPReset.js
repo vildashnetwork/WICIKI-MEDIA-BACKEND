@@ -35,7 +35,7 @@ router.post('/send', async (req, res) => {
     }
 
     const otp = crypto.randomInt(100000, 999999).toString();
-    const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
+    const expiresAt = new Date(Date.now() + 1 * 60 * 1000);
 
     await OTPmodel.findOneAndUpdate(
       { email },
@@ -71,7 +71,7 @@ router.post('/send', async (req, res) => {
         <div class="header">Password Reset Request</div>
         <div class="content">
           <p>Hello <strong>${user.name || "there"}</strong>,</p>
-          <p>We received a request to reset your password. Use the OTP below to continue. It’s valid for <strong>10 minutes</strong>:</p>
+          <p>We received a request to reset your password. Use the OTP below to continue. It’s valid for <strong>1 minutes</strong>:</p>
           <div class="otp-box">${otp}</div>
           <p class="note">⚠️ If you did not request this, please ignore this email.</p>
         </div>
