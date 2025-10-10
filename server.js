@@ -11,7 +11,7 @@ import morgan from "morgan";
 import cookieParser from "cookie-parser";
 import verify from "./routes/verifyemail.js"
 import sendotp from "./routes/OTPReset.js"
-
+import decodeuser from "./routes/FillProfile.js"
 import "./auth/passport.js";
 import auth from "./routes/RegisterLogin.js";
 
@@ -76,7 +76,7 @@ app.use(passport.session());
 app.use("/auth-user", auth);
 app.use("/verify", verify);
 app.use("/otp", sendotp)
-
+app.use("/decode", decodeuser)
 app.get("/", (req, res) => {
     setTimeout(() => {
         res.send("Hello, World!");
@@ -110,7 +110,7 @@ app.get(
                 maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
             });
             // ${FRONTEND_URL}
-            return res.redirect(`${frontend}questions/auth?${token}`);
+            return res.redirect(`${frontend}auth?${token}`);
         } catch (err) {
             console.error("Error setting JWT cookie:", err);
             return res.redirect(`${frontend}/login-failed`);
