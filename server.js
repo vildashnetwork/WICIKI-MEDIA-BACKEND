@@ -77,6 +77,7 @@ app.use("/auth-user", auth);
 app.use("/verify", verify);
 app.use("/otp", sendotp)
 app.use("/decode", decodeuser)
+
 app.get("/", (req, res) => {
     setTimeout(() => {
         res.send("Hello, World!");

@@ -1,8 +1,34 @@
+// routes/update.js (your router file)
 import express from "express";
 import decodeTokenFromReq from "./auth_token/decode_token.js";
 import User from "../models/User/User.js";
 
 const router = express.Router();
+
+const normalizeInterests = (v) => {
+  if (!v) return [];
+  if (Array.isArray(v)) return v.map((s) => String(s).trim()).filter(Boolean);
+
+  // If it's a JSON string like '["A","B"]'
+  if (typeof v === "string") {
+    try {
+      const parsed = JSON.parse(v);
+      if (Array.isArray(parsed)) return parsed.map((s) => String(s).trim()).filter(Boolean);
+    } catch (e) {
+      // not JSON — fallback to comma-separated
+      return v.split(",").map((s) => s.trim()).filter(Boolean);
+    }
+  }
+
+  return [];
+};
+
+const normalizeBool = (v, fallback = false) => {
+  if (typeof v === "boolean") return v;
+  if (typeof v === "string") return v === "true" || v === "1";
+  if (typeof v === "number") return v === 1;
+  return Boolean(v) || fallback;
+};
 
 router.post("/update", async (req, res) => {
   try {
@@ -31,28 +57,32 @@ router.post("/update", async (req, res) => {
       ShowUnknownGists
     } = req.body;
 
+    const interestArray = normalizeInterests(Interest);
+
+    const personalisedUpdate = {
+      NickName: NickName ?? "",
+      Gender: Gender ?? "",
+      DOB: DOB ?? "",
+      BIO: BIO ?? "",
+      whoareyou: whoareyou ?? "",
+      presentlocation: presentlocation ?? "",
+      Interest: interestArray,
+      companyname: companyname ?? "",
+      profilevisibility: normalizeBool(profilevisibility, true),
+      allowMessages: normalizeBool(allowMessages, true),
+      showBirthday: normalizeBool(showBirthday, false),
+      allowTagging: normalizeBool(allowTagging, true),
+      ShowAllMentors: normalizeBool(ShowAllMentors, true),
+      ShowUnknownGists: normalizeBool(ShowUnknownGists, true),
+    };
+
     const updatedUser = await User.findByIdAndUpdate(
       userId,
       {
         picture,
-        personalised: {
-          NickName,
-          Gender,
-          DOB,
-          BIO,
-          whoareyou,
-          presentlocation,
-          Interest,
-          companyname,
-          profilevisibility,
-          allowMessages,
-          showBirthday,
-          allowTagging,
-          ShowAllMentors,
-          ShowUnknownGists
-        }
+        personalised: personalisedUpdate
       },
-      { new: true, runValidators: true }
+      { new: true, runValidators: true, context: "query" }
     ).select("-password -__v");
 
     if (!updatedUser) return res.status(404).json({ message: "User not found" });

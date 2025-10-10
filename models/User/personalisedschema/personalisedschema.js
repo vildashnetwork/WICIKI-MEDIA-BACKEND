@@ -1,27 +1,26 @@
+// personalisedschema/personalisedschema.js
 import mongoose from "mongoose";
 
 const personalisedschema = new mongoose.Schema({
-    // profile: { type: String },
-    NickName: { type: String },
-    Gender: { type: String },
-    DOB: { type: String },
-    BIO: { type: String },
-    whoareyou: {type: String},
-    presentlocation: {type: String},
-    Interest: { type: String },
-    companyname: {type:  String},
+  NickName: { type: String, default: "" },
+  Gender: { type: String, default: "" },
+  DOB: { type: String, default: "" },
+  BIO: { type: String, default: "" },
+  whoareyou: { type: String, default: "" },
+  presentlocation: { type: String, default: "" },
 
+  // Changed to array of strings
+  Interest: { type: [String], default: [] },
 
-    profilevisibility: { type: Boolean },
-    showbirthday: { type: Boolean },
-    allowMessages: {type: String},
-    showBirthday: {type: String},
-    allowTagging: {type:  String},
-    ShowAllMentors: {type: String},
-    ShowUnknownGists: {type: String}
+  companyname: { type: String, default: "" },
 
-})
+  // Consistent boolean fields
+  profilevisibility: { type: Boolean, default: true },
+  showBirthday: { type: Boolean, default: false },
+  allowMessages: { type: Boolean, default: true },
+  allowTagging: { type: Boolean, default: true },
+  ShowAllMentors: { type: Boolean, default: true },
+  ShowUnknownGists: { type: Boolean, default: true },
+});
 
-
-
-export default personalisedschema
+export default personalisedschema;
