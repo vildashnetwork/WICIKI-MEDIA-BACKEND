@@ -92,8 +92,10 @@ app.get(
     passport.authenticate("google", { scope: ["profile", "email"] })
 );
 
-const frontend = "https://wicikis.vercel.app/"
+const frontend = "https://wicikis.vercel.app/ "
+
 app.get(
+
     "/auth/google/callback",
     passport.authenticate("google", { failureRedirect: `${frontend}/login-failed` }),
     (req, res) => {
