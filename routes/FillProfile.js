@@ -15,7 +15,7 @@ const normalizeInterests = (v) => {
       const parsed = JSON.parse(v);
       if (Array.isArray(parsed)) return parsed.map((s) => String(s).trim()).filter(Boolean);
     } catch (e) {
-      // not JSON — fallback to comma-separated
+     
       return v.split(",").map((s) => s.trim()).filter(Boolean);
     }
   }
@@ -32,6 +32,7 @@ const normalizeBool = (v, fallback = false) => {
 
 router.post("/update", async (req, res) => {
   try {
+    
     const result = decodeTokenFromReq(req);
     if (!result.ok) return res.status(result.status).json({ message: result.message });
 
