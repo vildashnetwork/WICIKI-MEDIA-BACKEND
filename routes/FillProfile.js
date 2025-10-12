@@ -15,7 +15,7 @@ const normalizeInterests = (v) => {
       const parsed = JSON.parse(v);
       if (Array.isArray(parsed)) return parsed.map((s) => String(s).trim()).filter(Boolean);
     } catch (e) {
-     
+
       return v.split(",").map((s) => s.trim()).filter(Boolean);
     }
   }
@@ -32,7 +32,7 @@ const normalizeBool = (v, fallback = false) => {
 
 router.post("/update", async (req, res) => {
   try {
-    
+
     const result = decodeTokenFromReq(req);
     if (!result.ok) return res.status(result.status).json({ message: result.message });
 
@@ -95,6 +95,26 @@ router.post("/update", async (req, res) => {
   } catch (err) {
     console.error("POST /update error:", err);
     return res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+router.get("/me", async (req, res) => {
+  try {
+    const result = decodeTokenFromReq(req);
+    if (!result.ok) return res.status(result.status).json({ message: result.message });
+
+    const payload = result.payload;
+    const userId = payload.id || payload._id;
+    if (!userId) return res.status(400).json({ message: "Token payload missing user id" });
+    const user = await User.findById(userId).select("-password -__v");
+    if (!user) return res.status(404).json({ message: "User not found" });
+    res.status(200).json({ user });
+
+
+  } catch (error) {
+    console.error("GET /me error:", error);
+
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 

@@ -92,7 +92,7 @@ app.get(
     passport.authenticate("google", { scope: ["profile", "email"] })
 );
 
-const frontend = "https://wicikis.vercel.app/ "
+const frontend = "http://localhost:5173/ "
 
 app.get(
 
