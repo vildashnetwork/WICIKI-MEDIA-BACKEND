@@ -23,6 +23,7 @@ const userSchema = new mongoose.Schema({
   YearsOfExperience: { type: String },
   SpokenLanguages: { type: [String], default: [] },
   ProgrammingLanguages: { type: [String], default: [] },
+  website: { type: String, default: "" }
 });
 
 const User = mongoose.model('User', userSchema);

@@ -150,11 +150,13 @@ router.post("/update/work", async (req, res) => {
       YearsOfExperience,
       SpokenLanguages,
       ProgrammingLanguages,
+      website
     } = req.body;
 
     const updateFields = {
       proffession: proffession ?? "",
       Education: Education ?? "",
+      website: website ?? "",
       ProjectsCompleted: ProjectsCompleted ?? "",
       YearsOfExperience: YearsOfExperience ?? "",
       SpokenLanguages: Array.isArray(SpokenLanguages) ? SpokenLanguages : [],
