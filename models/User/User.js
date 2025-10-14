@@ -14,8 +14,15 @@ const userSchema = new mongoose.Schema({
   picture: String,
   Story: [storySchema],
   Posts: [UserPostSchema],
-  personalised: personalisedschema, 
-  createdAt: { type: Date, default: Date.now }
+  personalised: personalisedschema,
+  createdAt: { type: Date, default: Date.now },
+
+  proffession: { type: String },
+  Education: { type: String },
+  ProjectsCompleted: { type: String },
+  YearsOfExperience: { type: String },
+  SpokenLanguages: { type: [String], default: [] },
+  ProgrammingLanguages: { type: [String], default: [] },
 });
 
 const User = mongoose.model('User', userSchema);

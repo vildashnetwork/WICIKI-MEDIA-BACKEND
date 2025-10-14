@@ -134,5 +134,49 @@ router.get("/me/:name", async (req, res) => {
   }
 })
 
+router.post("/update/work", async (req, res) => {
+  try {
+    const result = decodeTokenFromReq(req);
+    if (!result.ok) return res.status(result.status).json({ message: result.message });
+
+    const payload = result.payload;
+    const userId = payload.id || payload._id;
+    if (!userId) return res.status(400).json({ message: "Token payload missing user id" });
+
+    const {
+      proffession,
+      Education,
+      ProjectsCompleted,
+      YearsOfExperience,
+      SpokenLanguages,
+      ProgrammingLanguages,
+    } = req.body;
+
+    const updateFields = {
+      proffession: proffession ?? "",
+      Education: Education ?? "",
+      ProjectsCompleted: ProjectsCompleted ?? "",
+      YearsOfExperience: YearsOfExperience ?? "",
+      SpokenLanguages: Array.isArray(SpokenLanguages) ? SpokenLanguages : [],
+      ProgrammingLanguages: Array.isArray(ProgrammingLanguages) ? ProgrammingLanguages : []
+    };
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      updateFields,
+      { new: true, runValidators: true, context: "query" }
+    ).select("-password -__v");
+
+    if (!updatedUser) return res.status(404).json({ message: "User not found" });
+
+    return res.status(200).json({
+      message: "Professional profile updated successfully",
+      user: updatedUser
+    });
+  } catch (err) {
+    console.error("POST /update/work error:", err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+});
 
 export default router;
