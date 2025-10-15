@@ -313,4 +313,32 @@ router.post("/update/deactivate", async (req, res) => {
   }
 });
 
+
+router.post("/update/bio", async (req, res) => {
+  try {
+    const result = decodeTokenFromReq(req);
+    if (!result.ok) return res.status(result.status).json({ message: result.message });
+    const payload = result.payload;
+    const userId = payload.id || payload._id;
+    if (!userId) return res.status(400).json({ message: "Token payload missing user id" });
+
+    const { whoareyou } = req.body;
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      {
+        personalised: {
+          whoareyou: whoareyou
+        }
+      },
+      { new: true, runValidators: true, context: "query" }
+    ).select("-password -__v");
+    if (!updatedUser) return res.status(404).json({ message: "User not found" });
+    return res.status(200).json({
+      message: "Account bio updated",
+      user: updatedUser
+    });
+  } catch (error) {
+    console.log(error)
+  }
+})
 export default router;
