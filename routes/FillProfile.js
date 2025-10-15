@@ -322,12 +322,12 @@ router.post("/update/bio", async (req, res) => {
     const userId = payload.id || payload._id;
     if (!userId) return res.status(400).json({ message: "Token payload missing user id" });
 
-    const { whoareyou } = req.body;
+    const { BIO } = req.body;
     const updatedUser = await User.findByIdAndUpdate(
       userId,
       {
         personalised: {
-          whoareyou: whoareyou
+          BIO: BIO ?? ""
         }
       },
       { new: true, runValidators: true, context: "query" }
