@@ -287,4 +287,30 @@ router.post("/update/display", async (req, res) => {
 });
 
 
+router.post("/update/deactivate", async (req, res) => {
+  try {
+    const result = decodeTokenFromReq(req);
+    if (!result.ok) return res.status(result.status).json({ message: result.message });
+    const payload = result.payload;
+    const userId = payload.id || payload._id;
+    if (!userId) return res.status(400).json({ message: "Token payload missing user id" });
+    const { Deactivate } = req.body;
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      {
+        Deactivate: normalizeBool(Deactivate, false)
+      },
+      { new: true, runValidators: true, context: "query" }
+    ).select("-password -__v");
+    if (!updatedUser) return res.status(404).json({ message: "User not found" });
+    return res.status(200).json({
+      message: "Account deactivated successfully",
+      user: updatedUser
+    });
+  } catch (err) {
+    console.error("POST /update/deactivate error:", err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+});
+
 export default router;

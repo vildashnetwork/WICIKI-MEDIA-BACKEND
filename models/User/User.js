@@ -42,6 +42,7 @@ const userSchema = new mongoose.Schema({
   imageAndVideoQuality: { type: String, enum: ["low", "medium", "high"], default: "medium" },
 
 
+  Deactivate: { type: Boolean, default: false },
 
   accountstatus: { type: String, enum: ["active", "suspended", "deactivated"], default: "active" },
   friends: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
