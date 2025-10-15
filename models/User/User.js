@@ -37,7 +37,9 @@ const userSchema = new mongoose.Schema({
   NotificationSounds: { type: Boolean, default: true },
 
 
-
+  FontSize: { type: String, enum: ["small", "medium", "large"], default: "medium" },
+  ReduceMotion: { type: Boolean, default: true },
+  imageAndVideoQuality: { type: String, enum: ["low", "medium", "high"], default: "medium" },
 
 
 

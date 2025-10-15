@@ -253,4 +253,38 @@ router.post("/update/notifications", async (req, res) => {
   }
 });
 
+
+router.post("/update/display", async (req, res) => {
+  try {
+    const result = decodeTokenFromReq(req);
+    if (!result.ok) return res.status(result.status).json({ message: result.message });
+    const payload = result.payload;
+    const userId = payload.id || payload._id;
+    if (!userId) return res.status(400).json({ message: "Token payload missing user id" });
+    const {
+      FontSize,
+      ReduceMotion,
+      imageAndVideoQuality
+    } = req.body;
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      {
+        FontSize: ["small", "medium", "large"].includes(FontSize) ? FontSize : "medium",
+        ReduceMotion: normalizeBool(ReduceMotion, false),
+        imageAndVideoQuality: ["low", "medium", "high"].includes(imageAndVideoQuality) ? imageAndVideoQuality : "medium"
+      },
+      { new: true, runValidators: true, context: "query" }
+    ).select("-password -__v");
+    if (!updatedUser) return res.status(404).json({ message: "User not found" });
+    return res.status(200).json({
+      message: "Display settings updated successfully",
+      user: updatedUser
+    });
+  } catch (err) {
+    console.error("POST /update/display error:", err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+
 export default router;
