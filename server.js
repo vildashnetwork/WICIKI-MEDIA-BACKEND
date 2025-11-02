@@ -1,4 +1,7 @@
 
+import cron from 'node-cron';
+import fetch from 'node-fetch';
+
 import express from "express";
 import mongoose from "mongoose";
 import session from "express-session";
@@ -19,6 +22,17 @@ dotenv.config();
 
 const app = express();
 
+const URL = 'https://wicikibackend.onrender.com/ping';
+
+
+function scheduleRandomPing() {
+    const minutes = Math.floor(Math.random() * 11) + 5; // 5..15
+    cron.schedule(`*/${minutes} * * * *`, async () => {
+        try { await fetch(URL); console.log('pinged'); }
+        catch (e) { console.error('ping failed', e.message); }
+    });
+}
+scheduleRandomPing();
 // Helpful flags
 const PORT = process.env.PORT || 4000;
 const FRONTEND_URL = "http://localhost:5173";
