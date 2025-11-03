@@ -3,6 +3,7 @@ import express from "express";
 import mongoose from "mongoose";
 import Post from "../models/User/userpost/UserpostSchema.js";
 import decodeTokenFromReq from "./auth_token/decode_token.js";
+import User from "../models/User/User.js";
 
 const router = express.Router();
 
@@ -147,13 +148,15 @@ router.post("/", requireAuth, async (req, res) => {
         } = req.body;
 
         const user = req.user;
+        const getuserall = await User.findById(user.id);
+
 
         const newPost = new Post({
-            user: {
+            getuserall: {
                 id: new mongoose.Types.ObjectId(user.id), // <-- use 'new' here
-                name: user.name || user.email || "",
-                picture: user.picture || "",
-                profileLink: `http://localhost:5173/profile/${user.name}`,
+                name: getuserall.name || getuserall.email || "",
+                picture: getuserall?.picture || "",
+                profileLink: `http://localhost:5173/profile/${getuserall.name}`,
             },
             text,
             image,
