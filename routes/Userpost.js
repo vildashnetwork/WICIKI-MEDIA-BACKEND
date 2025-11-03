@@ -236,4 +236,56 @@ router.post("/:id/repost", requireAuth, async (req, res) => {
     }
 });
 
+
+
+
+
+
+
+
+
+
+
+
+/* ---------------------------
+   GET ALL POSTS
+   GET /api/posts
+   Optional query params:
+     - contentType=text|image|video|gallery|mixed|story
+     - visibility=public|friends|private
+     - page=1
+     - limit=20
+---------------------------- */
+router.get("/", async (req, res) => {
+    try {
+        const { contentType, visibility, page = 1, limit = 20 } = req.query;
+
+        const filter = {};
+
+        if (contentType && CONTENT_TYPES.includes(contentType)) {
+            filter.contentType = contentType;
+        }
+
+        if (visibility) {
+            filter.visibility = visibility;
+        }
+
+        // Sort newest first
+        const posts = await Post.find(filter)
+            .sort({ createdAt: -1 })
+            .skip((page - 1) * limit)
+            .limit(Number(limit))
+            .lean(); // lean() returns plain JS objects (faster)
+
+        // Optional: add total count for pagination
+        const total = await Post.countDocuments(filter);
+
+        return res.json({ posts, page: Number(page), limit: Number(limit), total });
+    } catch (err) {
+        console.error("Get posts error:", err);
+        return res.status(500).json({ error: "Failed to fetch posts" });
+    }
+});
+
+
 export default router;
