@@ -515,4 +515,97 @@ router.post("/:postId/comment/:commentId/like", requireAuth, async (req, res) =>
 });
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// GET /api/posts/:id
+// Returns a single post by id. If a valid token is present (attachUserFromToken runs on this router),
+// the response will include `likedByMe` on the post and on each comment where applicable.
+router.get("/:id", async (req, res) => {
+    try {
+        const postId = req.params.id;
+        if (!mongoose.Types.ObjectId.isValid(postId)) {
+            return res.status(400).json({ error: "Invalid post id" });
+        }
+
+        // fetch the post (lean => plain object)
+        const post = await Post.findById(postId).lean();
+        if (!post) return res.status(404).json({ error: "Post not found" });
+
+        // If attachUserFromToken set req.user, compute likedByMe flags
+        const currentUserId = req.user?.id ? String(req.user.id) : null;
+
+        // Normalize likes array shape: likes may be array of { userId } objects
+        if (Array.isArray(post.likes)) {
+            post.likesCount = post.likes.length;
+            if (currentUserId) {
+                post.likedByMe = post.likes.some((lk) => {
+                    // support both { userId: ObjectId } and bare ObjectId entries
+                    if (!lk) return false;
+                    if (lk.userId) return String(lk.userId) === currentUserId;
+                    return String(lk) === currentUserId;
+                });
+            } else {
+                post.likedByMe = false;
+            }
+        } else {
+            post.likesCount = 0;
+            post.likedByMe = false;
+        }
+
+        // For comments, compute likedByMe and normalize each comment
+        if (Array.isArray(post.comments)) {
+            post.comments = post.comments.map((c) => {
+                const comment = { ...c };
+                // comment.likes may be array of ObjectId (user ids) or like objects
+                let likesArr = Array.isArray(comment.likes) ? comment.likes : [];
+                comment.likesCount = likesArr.length;
+                if (currentUserId) {
+                    comment.likedByMe = likesArr.some((lk) => {
+                        if (!lk) return false;
+                        // if likes are stored as ObjectId strings or objects
+                        if (typeof lk === "object" && lk._id) {
+                            // rare case of full docs
+                            return String(lk._id) === currentUserId;
+                        }
+                        return String(lk) === currentUserId;
+                    });
+                } else {
+                    comment.likedByMe = false;
+                }
+                return comment;
+            });
+        } else {
+            post.comments = [];
+        }
+
+        return res.json({ post });
+    } catch (err) {
+        console.error("Get post by id error:", err);
+        return res.status(500).json({ error: "Failed to fetch post", details: err.message });
+    }
+});
+
+
+
 export default router;
