@@ -76,6 +76,8 @@ router.use(attachUserFromToken);
    CREATE POST
    POST /api/posts
 ---------------------------- */
+
+
 // router.post("/", requireAuth, async (req, res) => {
 //     try {
 //         const {
@@ -91,13 +93,15 @@ router.use(attachUserFromToken);
 //         } = req.body;
 
 //         const user = req.user;
+//         const getuserall = await User.findById(user.id);
+
 
 //         const newPost = new Post({
-//             user: {
-//                 id: mongoose.Types.ObjectId(user.id),
-//                 name: user.name || user.email || "",
-//                 picture: user.avatar || "",
-//                 profileLink: user.profileLink || ""
+//             getuserall: {
+//                 id: new mongoose.Types.ObjectId(getuserall.id), // <-- use 'new' here
+//                 name: getuserall.name || getuserall.email || "",
+//                 picture: getuserall?.picture || "",
+//                 profileLink: `http://localhost:5173/profile/${getuserall.name}`,
 //             },
 //             text,
 //             image,
@@ -106,7 +110,6 @@ router.use(attachUserFromToken);
 //             visibility,
 //             tags: Array.isArray(tags) ? tags : [],
 //             story: story || undefined,
-//             // store media array if provided (optional field in schema)
 //             media: Array.isArray(media) ? media : undefined
 //         });
 
@@ -133,6 +136,16 @@ router.use(attachUserFromToken);
 
 
 
+
+
+
+
+
+
+
+// make sure you have User imported at top:
+// import User from "../models/User/User.js"; // <-- adjust path to your real User model
+
 router.post("/", requireAuth, async (req, res) => {
     try {
         const {
@@ -147,17 +160,27 @@ router.post("/", requireAuth, async (req, res) => {
             contentType: clientContentType
         } = req.body;
 
-        const user = req.user;
-        const getuserall = await User.findById(user.id);
+        // ensure auth attached a user
+        if (!req.user || !req.user.id) {
+            return res.status(401).json({ error: "Unauthorized: no user in request" });
+        }
 
+        // fetch full user from DB (optional but useful)
+        const dbUser = await User.findById(req.user.id).lean();
+        if (!dbUser) {
+            return res.status(404).json({ error: "User not found" });
+        }
+
+        // Build the post's user field (must be `user` to match schema)
+        const userField = {
+            id: new mongoose.Types.ObjectId(dbUser._id), // use new with mongoose v7+
+            name: dbUser.name || dbUser.email || "",
+            picture: dbUser.picture || dbUser.avatar || "",
+            profileLink: dbUser.profileLink || `/profile/${encodeURIComponent(dbUser.name || dbUser._id)}`
+        };
 
         const newPost = new Post({
-            getuserall: {
-                id: new mongoose.Types.ObjectId(getuserall.id), // <-- use 'new' here
-                name: getuserall.name || getuserall.email || "",
-                picture: getuserall?.picture || "",
-                profileLink: `http://localhost:5173/profile/${getuserall.name}`,
-            },
+            user: userField,              // <-- IMPORTANT: use `user`, not `getuserall`
             text,
             image,
             video,
@@ -168,7 +191,7 @@ router.post("/", requireAuth, async (req, res) => {
             media: Array.isArray(media) ? media : undefined
         });
 
-        // Determine contentType: prefer client-provided if valid, otherwise detect
+        // contentType logic (unchanged)
         if (clientContentType && typeof clientContentType === "string" && CONTENT_TYPES.includes(clientContentType)) {
             newPost.contentType = clientContentType;
         } else {
@@ -185,7 +208,8 @@ router.post("/", requireAuth, async (req, res) => {
         return res.status(201).json({ message: "Post created", post: newPost });
     } catch (err) {
         console.error("Create post error:", err);
-        return res.status(500).json({ error: "Failed to create post" });
+        // include error message in dev, but keep generic for clients if you prefer
+        return res.status(500).json({ error: "Failed to create post", details: err.message });
     }
 });
 
