@@ -153,7 +153,7 @@ router.post("/", requireAuth, async (req, res) => {
 
         const newPost = new Post({
             getuserall: {
-                id: new mongoose.Types.ObjectId(user.id), // <-- use 'new' here
+                id: new mongoose.Types.ObjectId(getuserall.id), // <-- use 'new' here
                 name: getuserall.name || getuserall.email || "",
                 picture: getuserall?.picture || "",
                 profileLink: `http://localhost:5173/profile/${getuserall.name}`,
