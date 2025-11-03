@@ -92,7 +92,7 @@ app.use("/auth-user", auth);
 app.use("/verify", verify);
 app.use("/otp", sendotp)
 app.use("/decode", decodeuser)
-app.use("/userpost", userpost);
+app.use("/api/posts", userpost);
 
 app.get("/", (req, res) => {
     setTimeout(() => {
