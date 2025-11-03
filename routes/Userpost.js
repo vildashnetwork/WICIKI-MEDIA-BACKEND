@@ -152,8 +152,8 @@ router.post("/", requireAuth, async (req, res) => {
             user: {
                 id: new mongoose.Types.ObjectId(user.id), // <-- use 'new' here
                 name: user.name || user.email || "",
-                picture: user.avatar || "",
-                profileLink: user.profileLink || ""
+                picture: user.picture || "",
+                profileLink: `http://localhost:5173/profile/${user.name}`,
             },
             text,
             image,
