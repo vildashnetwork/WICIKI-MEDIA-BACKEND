@@ -371,4 +371,148 @@ router.get("/", async (req, res) => {
 });
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ---------------------------
+// Like a post (toggle)
+// POST /api/posts/:id/like
+// body: { emoji?: "👍" }
+// ---------------------------
+router.post("/:id/like", requireAuth, async (req, res) => {
+    try {
+        const postId = req.params.id;
+        if (!mongoose.Types.ObjectId.isValid(postId)) return res.status(400).json({ error: "Invalid post id" });
+
+        const post = await Post.findById(postId);
+        if (!post) return res.status(404).json({ error: "Post not found" });
+
+        const userIdStr = req.user.id.toString();
+        const existingIndex = (post.likes || []).findIndex(l => l.userId?.toString() === userIdStr);
+
+        if (existingIndex >= 0) {
+            // remove like (toggle off)
+            post.likes.splice(existingIndex, 1);
+            await post.save();
+            return res.json({ message: "Like removed", liked: false, likesCount: post.likes.length });
+        } else {
+            // add like
+            const emoji = typeof req.body.emoji === "string" ? req.body.emoji : "❤️";
+            post.likes = post.likes || [];
+            post.likes.push({ userId: new mongoose.Types.ObjectId(req.user.id), emoji });
+            await post.save();
+            return res.json({ message: "Post liked", liked: true, likesCount: post.likes.length });
+        }
+    } catch (err) {
+        console.error("Post like error:", err);
+        return res.status(500).json({ error: "Failed to toggle like" });
+    }
+});
+
+// ---------------------------
+// Add a comment to a post
+// POST /api/posts/:id/comment
+// body: { message: string }
+// ---------------------------
+router.post("/:id/comment", requireAuth, async (req, res) => {
+    try {
+        const postId = req.params.id;
+        const { message } = req.body;
+
+        if (!message || !String(message).trim()) return res.status(400).json({ error: "Comment message is required" });
+        if (!mongoose.Types.ObjectId.isValid(postId)) return res.status(400).json({ error: "Invalid post id" });
+
+        const post = await Post.findById(postId);
+        if (!post) return res.status(404).json({ error: "Post not found" });
+
+        const commentObj = {
+            user: {
+                id: new mongoose.Types.ObjectId(req.user.id),
+                name: req.user.name || req.user.email || "",
+                picture: req.user.avatar || ""
+            },
+            message: String(message).trim(),
+            likes: [],
+            replies: [],
+            createdAt: new Date()
+        };
+
+        post.comments = post.comments || [];
+        post.comments.push(commentObj);
+        await post.save();
+
+        // return the newly added comment (it's the last item)
+        const addedComment = post.comments[post.comments.length - 1];
+        return res.status(201).json({ message: "Comment added", comment: addedComment, commentsCount: post.comments.length });
+    } catch (err) {
+        console.error("Add comment error:", err);
+        return res.status(500).json({ error: "Failed to add comment" });
+    }
+});
+
+// ---------------------------
+// Like a comment (toggle)
+// POST /api/posts/:postId/comment/:commentId/like
+// ---------------------------
+router.post("/:postId/comment/:commentId/like", requireAuth, async (req, res) => {
+    try {
+        const { postId, commentId } = req.params;
+        if (!mongoose.Types.ObjectId.isValid(postId) || !mongoose.Types.ObjectId.isValid(commentId)) {
+            return res.status(400).json({ error: "Invalid post or comment id" });
+        }
+
+        const post = await Post.findById(postId);
+        if (!post) return res.status(404).json({ error: "Post not found" });
+
+        // find comment subdocument
+        const comment = post.comments.id(commentId);
+        if (!comment) return res.status(404).json({ error: "Comment not found" });
+
+        const userIdStr = req.user.id.toString();
+        const existingIndex = (comment.likes || []).findIndex(uid => uid?.toString() === userIdStr);
+
+        if (existingIndex >= 0) {
+            // unlike
+            comment.likes.splice(existingIndex, 1);
+            await post.save();
+            return res.json({ message: "Comment like removed", liked: false, commentLikesCount: comment.likes.length });
+        } else {
+            // like
+            comment.likes = comment.likes || [];
+            comment.likes.push(new mongoose.Types.ObjectId(req.user.id));
+            await post.save();
+            return res.json({ message: "Comment liked", liked: true, commentLikesCount: comment.likes.length });
+        }
+    } catch (err) {
+        console.error("Comment like error:", err);
+        return res.status(500).json({ error: "Failed to toggle comment like" });
+    }
+});
+
+
 export default router;
