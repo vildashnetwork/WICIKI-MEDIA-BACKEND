@@ -126,7 +126,7 @@ router.post("/", requireAuth, async (req, res) => {
         return res.status(201).json({ message: "Post created", post: newPost });
     } catch (err) {
         console.error("Create post error:", err);
-        return res.status(500).json({ error: "Failed to create post" });
+        return res.status(500).json({ err });
     }
 });
 
