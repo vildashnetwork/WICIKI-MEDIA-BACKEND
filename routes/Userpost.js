@@ -75,6 +75,63 @@ router.use(attachUserFromToken);
    CREATE POST
    POST /api/posts
 ---------------------------- */
+// router.post("/", requireAuth, async (req, res) => {
+//     try {
+//         const {
+//             text = "",
+//             image = "",
+//             video = "",
+//             location = "",
+//             visibility = "public",
+//             tags = [],
+//             story,
+//             media,
+//             contentType: clientContentType
+//         } = req.body;
+
+//         const user = req.user;
+
+//         const newPost = new Post({
+//             user: {
+//                 id: mongoose.Types.ObjectId(user.id),
+//                 name: user.name || user.email || "",
+//                 picture: user.avatar || "",
+//                 profileLink: user.profileLink || ""
+//             },
+//             text,
+//             image,
+//             video,
+//             location,
+//             visibility,
+//             tags: Array.isArray(tags) ? tags : [],
+//             story: story || undefined,
+//             // store media array if provided (optional field in schema)
+//             media: Array.isArray(media) ? media : undefined
+//         });
+
+//         // Determine contentType: prefer client-provided if valid, otherwise detect
+//         if (clientContentType && typeof clientContentType === "string" && CONTENT_TYPES.includes(clientContentType)) {
+//             newPost.contentType = clientContentType;
+//         } else {
+//             newPost.contentType = detectContentType({
+//                 text: newPost.text,
+//                 image: newPost.image,
+//                 video: newPost.video,
+//                 story: newPost.story,
+//                 media: newPost.media
+//             });
+//         }
+
+//         await newPost.save();
+//         return res.status(201).json({ message: "Post created", post: newPost });
+//     } catch (err) {
+//         console.error("Create post error:", err);
+//         return res.status(500).json({ error: "Failed to create post" });
+//     }
+// });
+
+
+
 router.post("/", requireAuth, async (req, res) => {
     try {
         const {
@@ -93,7 +150,7 @@ router.post("/", requireAuth, async (req, res) => {
 
         const newPost = new Post({
             user: {
-                id: mongoose.Types.ObjectId(user.id),
+                id: new mongoose.Types.ObjectId(user.id), // <-- use 'new' here
                 name: user.name || user.email || "",
                 picture: user.avatar || "",
                 profileLink: user.profileLink || ""
@@ -105,7 +162,6 @@ router.post("/", requireAuth, async (req, res) => {
             visibility,
             tags: Array.isArray(tags) ? tags : [],
             story: story || undefined,
-            // store media array if provided (optional field in schema)
             media: Array.isArray(media) ? media : undefined
         });
 
@@ -126,7 +182,7 @@ router.post("/", requireAuth, async (req, res) => {
         return res.status(201).json({ message: "Post created", post: newPost });
     } catch (err) {
         console.error("Create post error:", err);
-        return res.status(500).json({ err });
+        return res.status(500).json({ error: "Failed to create post" });
     }
 });
 
