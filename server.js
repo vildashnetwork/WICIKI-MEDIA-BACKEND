@@ -17,6 +17,7 @@ import sendotp from "./routes/OTPReset.js"
 import decodeuser from "./routes/FillProfile.js"
 import "./auth/passport.js";
 import auth from "./routes/RegisterLogin.js";
+import userpost from './routes/Userpost.js';
 
 dotenv.config();
 
@@ -91,6 +92,7 @@ app.use("/auth-user", auth);
 app.use("/verify", verify);
 app.use("/otp", sendotp)
 app.use("/decode", decodeuser)
+app.use("/userpost", userpost);
 
 app.get("/", (req, res) => {
     setTimeout(() => {
