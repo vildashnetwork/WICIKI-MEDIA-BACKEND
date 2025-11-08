@@ -103,17 +103,66 @@ app.get("/", (req, res) => {
 const COOKIE_NAME = "token";
 const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000; // 7 days
 
+// app.get(
+//     "/auth/google",
+//     passport.authenticate("google", { scope: ["profile", "email"] })
+// );
+
+// const frontend = "http://localhost:5173/ "
+
+// app.get(
+
+//     "/auth/google/callback",
+//     passport.authenticate("google", { failureRedirect: `${frontend}/login-failed` }),
+//     (req, res) => {
+//         try {
+//             const token = jwt.sign(
+//                 { id: req.user._id, email: req.user.email },
+//                 process.env.JWT_SECRET,
+//                 { expiresIn: "7d" }
+//             );
+
+//             res.cookie("token", token, {
+//                 httpOnly: true,
+//                 secure: true,             // ✅ must be true (Render uses HTTPS)
+//                 sameSite: "none",         // ✅ for cross-site (frontend != backend)
+//                 maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+//             });
+//             // ${FRONTEND_URL}
+//             return res.redirect(`${frontend}auth?${token}`);
+//         } catch (err) {
+//             console.error("Error setting JWT cookie:", err);
+//             return res.redirect(`${frontend}/login-failed`);
+//         }
+//     }
+// );
+// --- server: edits to paste into your existing server file ---
+// (keep all your other imports and middleware as-is earlier in the file)
+
+// Fix the frontend variable (remove trailing space)
+const FRONTEND_URL = "http://localhost:5173";
+
+// Desktop redirect target (Option B)
+const DESKTOP_LOCALHOST_CALLBACK = "http://127.0.0.1:3100/auth";
+
+const COOKIE_NAME = "token";
+const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+// Keep your existing start endpoint for web
+app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+
+// New route to start OAuth for desktop (sets state=desktop)
 app.get(
-    "/auth/google",
-    passport.authenticate("google", { scope: ["profile", "email"] })
+    "/auth/google/desktop",
+    (req, res, next) => {
+        passport.authenticate("google", { scope: ["profile", "email"], state: "desktop" })(req, res, next);
+    }
 );
 
-const frontend = "http://localhost:5173/ "
-
+// Callback route (handles both web and desktop)
 app.get(
-
     "/auth/google/callback",
-    passport.authenticate("google", { failureRedirect: `${frontend}/login-failed` }),
+    passport.authenticate("google", { failureRedirect: `${FRONTEND_URL}/login-failed` }),
     (req, res) => {
         try {
             const token = jwt.sign(
@@ -122,17 +171,27 @@ app.get(
                 { expiresIn: "7d" }
             );
 
-            res.cookie("token", token, {
-                httpOnly: true,
-                secure: true,             // ✅ must be true (Render uses HTTPS)
-                sameSite: "none",         // ✅ for cross-site (frontend != backend)
-                maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-            });
-            // ${FRONTEND_URL}
-            return res.redirect(`${frontend}auth?${token}`);
+            // Detect if this flow was initiated for desktop
+            const isDesktop = req.query && req.query.state === "desktop";
+
+            if (!isDesktop) {
+                // Web flow: set cookie and redirect to frontend SPA
+                res.cookie("token", token, {
+                    httpOnly: true,
+                    secure: isProd,          // must be true if using HTTPS in prod
+                    sameSite: isProd ? "none" : "lax",
+                    maxAge: COOKIE_MAX_AGE,
+                });
+
+                return res.redirect(`${FRONTEND_URL}/auth?${encodeURIComponent(token)}`);
+            }
+
+            // Desktop flow (Option B): redirect to local callback server
+            // Ensure token is URL-encoded
+            return res.redirect(`${DESKTOP_LOCALHOST_CALLBACK}?token=${encodeURIComponent(token)}`);
         } catch (err) {
             console.error("Error setting JWT cookie:", err);
-            return res.redirect(`${frontend}/login-failed`);
+            return res.redirect(`${FRONTEND_URL}/login-failed`);
         }
     }
 );
