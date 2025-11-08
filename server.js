@@ -140,13 +140,11 @@ const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000; // 7 days
 // (keep all your other imports and middleware as-is earlier in the file)
 
 // Fix the frontend variable (remove trailing space)
-const FRONTEND_URL = "http://localhost:5173";
+const FRONTEND = "http://localhost:5173";
 
 // Desktop redirect target (Option B)
 const DESKTOP_LOCALHOST_CALLBACK = "http://127.0.0.1:3100/auth";
 
-const COOKIE_NAME = "token";
-const COOKIE_MAX_AGE = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 // Keep your existing start endpoint for web
 app.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
@@ -162,7 +160,7 @@ app.get(
 // Callback route (handles both web and desktop)
 app.get(
     "/auth/google/callback",
-    passport.authenticate("google", { failureRedirect: `${FRONTEND_URL}/login-failed` }),
+    passport.authenticate("google", { failureRedirect: `${FRONTEND}/login-failed` }),
     (req, res) => {
         try {
             const token = jwt.sign(
@@ -183,7 +181,7 @@ app.get(
                     maxAge: COOKIE_MAX_AGE,
                 });
 
-                return res.redirect(`${FRONTEND_URL}/auth?${encodeURIComponent(token)}`);
+                return res.redirect(`${FRONTEND}/auth?${encodeURIComponent(token)}`);
             }
 
             // Desktop flow (Option B): redirect to local callback server
@@ -191,7 +189,7 @@ app.get(
             return res.redirect(`${DESKTOP_LOCALHOST_CALLBACK}?token=${encodeURIComponent(token)}`);
         } catch (err) {
             console.error("Error setting JWT cookie:", err);
-            return res.redirect(`${FRONTEND_URL}/login-failed`);
+            return res.redirect(`${FRONTEND}/login-failed`);
         }
     }
 );
