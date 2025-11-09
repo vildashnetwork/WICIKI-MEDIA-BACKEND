@@ -78,16 +78,53 @@ router.post("/register", async (req, res) => {
 });
 
 
+// router.post("/login", async (req, res) => {
+//     try {
+//         const { email, password } = req.body;
+
+//         const user = await User.findOne({ email });
+//         if (!user) return res.status(404).json({ message: "User not found" });
+
+//         const isMatch = bcrypt.compare(password, user.password);
+//         if (!isMatch) return res.status(401).json({ message: "Invalid credentials" });
+
+//         const token = jwt.sign(
+//             { id: user._id },
+//             process.env.JWT_SECRET,
+//             { expiresIn: "15d" }
+//         );
+
+//         res.status(200).json({
+//             message: "Login successful",
+//             user: sanitizeUser(user),
+//             usert: token
+//         });
+//     } catch (err) {
+//         console.error("Login error:", err);
+//         res.status(500).json({ message: "Internal server error" });
+//     }
+// });
 router.post("/login", async (req, res) => {
     try {
         const { email, password } = req.body;
 
+        if (!email || !password) {
+            return res.status(400).json({ message: "Email and password are required" });
+        }
+
         const user = await User.findOne({ email });
         if (!user) return res.status(404).json({ message: "User not found" });
 
-        const isMatch = bcrypt.compare(password, user.password);
+        // Make sure the stored password exists
+        if (!user.password) {
+            return res.status(400).json({ message: "This account has no password. Please reset or use social login." });
+        }
+
+        // ✅ Must await bcrypt.compare
+        const isMatch = await bcrypt.compare(password, user.password);
         if (!isMatch) return res.status(401).json({ message: "Invalid credentials" });
 
+        // Sign JWT
         const token = jwt.sign(
             { id: user._id },
             process.env.JWT_SECRET,
@@ -97,13 +134,14 @@ router.post("/login", async (req, res) => {
         res.status(200).json({
             message: "Login successful",
             user: sanitizeUser(user),
-            usert: token
+            usert: token,
         });
     } catch (err) {
         console.error("Login error:", err);
         res.status(500).json({ message: "Internal server error" });
     }
 });
+
 
 /**
  * PUT /profile/:id
