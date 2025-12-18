@@ -297,20 +297,21 @@ import userpost from "./routes/Userpost.js";
 dotenv.config();
 const app = express();
 
-// --- keep Render alive ---
-const URL = "https://wicikibackend.onrender.com/ping";
-function scheduleRandomPing() {
-    const minutes = Math.floor(Math.random() * 11) + 5; // every 5–15 mins
-    cron.schedule(`*/${minutes} * * * *`, async () => {
-        try {
-            await fetch(URL);
-            console.log("pinged");
-        } catch (e) {
-            console.error("ping failed", e.message);
-        }
-    });
-}
-scheduleRandomPing();
+
+
+// const URL = "https://wiciki-media-backend.onrender.com/ping";
+// function scheduleRandomPing() {
+//     const minutes = Math.floor(Math.random() * 11) + 5; // every 5–15 mins
+//     cron.schedule(`*/${minutes} * * * *`, async () => {
+//         try {
+//             await fetch(URL);
+//             console.log("pinged");
+//         } catch (e) {
+//             console.error("ping failed", e.message);
+//         }
+//     });
+// }
+// scheduleRandomPing();
 
 // --- core settings ---
 const PORT = process.env.PORT || 4000;
@@ -332,7 +333,9 @@ app.use(cookieParser());
 const allowedOrigins = [
     FRONTEND_URL,
     "https://wicikis.vercel.app",
-    "http://127.0.0.1:3100", // <-- Electron local listener
+
+    "http://127.0.0.1:3100",
+    "http://localhost:5174/"
 ];
 
 app.use(
