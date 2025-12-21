@@ -11,7 +11,7 @@ passport.use(
         {
             clientID: process.env.GOOGLE_CLIENT_ID,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-            callbackURL: `https://wiciki-media-backend.onrender.com/auth/google/callback`,
+            callbackURL: `https://wiciki-media-backend-ahiu.onrender.com/auth/google/callback`,
         },
         async (accessToken, refreshToken, profile, done) => {
             try {
