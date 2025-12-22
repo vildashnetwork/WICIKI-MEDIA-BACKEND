@@ -335,7 +335,6 @@ app.use(cookieParser());
 
 const allowedOrigins = [
     "http://localhost:5174/",
-    "http://localhost:5173/",
     FRONTEND_URL,
     "https://wicikis.vercel.app",
     "http://127.0.0.1:3100",
