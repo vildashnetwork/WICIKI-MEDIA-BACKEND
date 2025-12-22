@@ -327,15 +327,19 @@ app.use(helmet());
 app.use(morgan(":method :url :status :response-time ms - :res[content-length]"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
 app.use(cookieParser());
 
-// allow localhost desktop + web frontend
+
+
+
 const allowedOrigins = [
+    "http://localhost:5174/",
+    "http://localhost:5173/",
     FRONTEND_URL,
     "https://wicikis.vercel.app",
-
     "http://127.0.0.1:3100",
-    "http://localhost:5174/"
+    "https://wicikis.onrender.com",
 ];
 
 app.use(
